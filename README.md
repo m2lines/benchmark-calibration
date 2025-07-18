@@ -12,7 +12,7 @@ The inverse problem has the following building blocks:
 Note: the forward map is assumed to be not differentiable but can be evaluated several times O(100-1000) in order to solve the Inverse Problem defined below.
 
 ## Definition of inverse problem
-Given vector $y$, map $G$ and, optionally, covariance matrix $\Gamma$, find vector of parameters $u$ which satisfies the equation $y=G(u)$ best.
+Given vector of observations $y$, forward mapping $G$ and, optionally, covariance matrix $\Gamma$, find vector of parameters $u$ which satisfies the equation $y=G(u)$ best.
 
 ## Deterministic inverse problems ($\Gamma=0$)
 Inverse problems, even linear ones, are famous for having many caveats related to the non-existence or non-uniqueness of the solution. Below, we suggest a set of simple analytical inverse problems to be used for benchmarking of calibration methods.
