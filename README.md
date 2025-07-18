@@ -86,3 +86,14 @@ These two methods exploit complementary techniques. EKI attempts to move the ens
 
 
 Note: While other methods might be used for solving inverse problems in a gradient-free manner, such as Bayesian Optimization or Nelder–Mead method, they would require reformulating the inverse problem as an optimization problem. Thus, we postpone this comparison for later.
+
+## Hyperparameters
+Each calibration method is working better or worse depending on the choice of hyperparameters. We would like to use exactly the same set of hyperparameters for all inverse problems. The motivation for doing this is the following:
+* All inverse problems have a solution that is of the order of unity
+* We want to prohibit tuning hyperparameters w.r.t. a particular problem, which is acceptable only in synthetic examples, where correct answers are known or evaluating forward map is relatively cheap
+
+## Evaluation metrics
+For each inverse problem and each calibration method we produce one error curve, which is
+```
+The error in the solution of the inverse problem, that is $||u-u_{true}||_2$ as a function of the number of forward map evaluations
+```
