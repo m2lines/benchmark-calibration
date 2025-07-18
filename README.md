@@ -12,20 +12,28 @@ The inverse problem has the following building blocks:
 Note: the forward map is assumed to be not differentiable but can be evaluated several times O(100-1000) in order to solve the Inverse Problem defined below.
 
 ## Definition of inverse problem
-Given vector $y$, map $G$ and, optionally, covariance matrix $\Gamma$, find vector of parameters $u$ which fits equation $y=G(u)$ best.
+Given vector $y$, map $G$ and, optionally, covariance matrix $\Gamma$, find vector of parameters $u$ which satisfies the equation $y=G(u)$ best.
 
-## List of deterministic inverse problems ($\Gamma=0$)
-Inverse problems, even linear ones, are famous for having many caveats related to the non-existence or non-uniqueness of the solution. Below, we suggest a set of simple analytical inverse problems, to be used for benchmarking of calibration methods.
+## Deterministic inverse problems ($\Gamma=0$)
+Inverse problems, even linear ones, are famous for having many caveats related to the non-existence or non-uniqueness of the solution. Below, we suggest a set of simple analytical inverse problems to be used for benchmarking of calibration methods.
 
 Find the minimum of a quadratic function:
 * $G(u)=\sum_{i=1}^n(u_i-a_i)^2$, $u, a\in{R}^n$
 * $y=0$
 * **Answer**: $u=a$.
+
+<details>
+  <summary>Additional inverse problems</summary>
   
 Find a unit sphere (non-unique solution):
 * $G(u)=\sum_{i=1}^n(u_i-a_i)^2$, $u, a\in{R}^n$
 * $y=1$
 * **Answer**: $u$ in unit sphere with center at $u=a$.
+
+Himmelblau's function:
+* $G(u)=(u_1^2+u_2-11)^2+(u_1+u_2^2-7)^2$
+* $y=0$
+* **Answer**: $u=[3,2]$, $u=[-2.805118,3.131312]$, $u=[-3.778310,-3.283186]$, $u=[3.584428,-1.848126]$
 
 Transcendental equation:
 * $G(u) = e^{-u}-u$, $u\in{R}^1$
@@ -67,7 +75,14 @@ Overdetermined rank-one linear system - optimal solution:
 * $y=e_k + e_K$, where $K \neq k$
 * **Answer**: $u=1$ is the optimal solution (in MSE); an exact solution does not exist
 
+</details>
 
 # Calibration methods
+We will compare two main methods designed to solve inverse problems: 
+* Ensemble Kalman Inversion (EKI) methods by invoking [repository](https://github.com/CliMA/EnsembleKalmanProcesses.jl)
+* History Matching (HM) method
+
+These two methods exploit complementary techniques. EKI attempts to move the ensemble towards a point of optimal parameter values. HM, instead, explores the full parameter space, which can potentially help solve inverse problems that do not have a unique solution. We use both algorithms in an "online" manner. This means that we are allowed to evaluate a forward map during the iteration of the algorithm. This is contrary to some applications of HM, where a forward map is evaluated for a big ensemble once and never evaluated again. 
 
 
+Note: While other methods might be used for solving inverse problems in a gradient-free manner, such as Bayesian Optimization or Nelder–Mead method, they would require reformulating the inverse problem as an optimization problem. Thus, we postpone this comparison for later.
