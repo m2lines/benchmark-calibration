@@ -82,7 +82,7 @@ We will compare two main methods designed to solve inverse problems:
 * Ensemble Kalman Inversion (EKI) methods by invoking [repository](https://github.com/CliMA/EnsembleKalmanProcesses.jl)
 * History Matching (HM) method
 
-These two methods exploit complementary techniques. EKI attempts to move the ensemble towards a point of optimal parameter values. HM, instead, explores the full parameter space, which can potentially help solve inverse problems that do not have a unique solution. We use both algorithms in an "online" manner. This means that we are allowed to evaluate a forward map during the iteration of the algorithm. This is contrary to some applications of HM, where a forward map is evaluated for a big ensemble once and never evaluated again. 
+These two methods exploit complementary techniques. EKI attempts to move the ensemble towards a point of optimal parameter values. HM, instead, explores the full parameter space, which can potentially help with non-uniqueness. We use both algorithms in an "online" manner. This means that we are allowed to evaluate a forward map during the iteration of the algorithm. This is contrary to some applications of HM, where a forward map is evaluated for a big ensemble once and never evaluated again. 
 
 
 Note: While other methods might be used for solving inverse problems in a gradient-free manner, such as Bayesian Optimization or Nelder–Mead method, they would require reformulating the inverse problem as an optimization problem. Thus, we postpone this comparison for later.
@@ -95,5 +95,5 @@ Each calibration method is working better or worse depending on the choice of hy
 ## Evaluation metrics
 For each inverse problem and each calibration method we produce one error curve, which is
 ```
-The error in the solution of the inverse problem, that is $||u-u_{true}||_2$ as a function of the number of forward map evaluations
+$||u-u_{true}||_2$ as a function of the number of forward map evaluations
 ```
