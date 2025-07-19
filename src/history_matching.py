@@ -1,7 +1,9 @@
 import numpy as np
 from sklearn.gaussian_process import GaussianProcessRegressor
+from sklearn.gaussian_process.kernels import RBF, ConstantKernel
 import matplotlib.pyplot as plt
 import math
+import warnings
 
 class HistoryMatching:
     """
@@ -15,10 +17,11 @@ class HistoryMatching:
     """
 
     def __init__(self, inverse_problem=None,                 
-                 initial_ensemble_size=10, 
+                 initial_ensemble_size=None, 
                  prior=np.random.randn,
                  emulator_sample_size=10000,
                  kernel=None,
+                 normalize_y=False,
                  implausibility_threshold=3.0):
         '''
         We specify the number of parameters and observations in order to generate the initial ensemble
@@ -33,12 +36,24 @@ class HistoryMatching:
         These samples will be used to find the extremal values of the Implausibility Function.
         For simplicity, we sample GP from the prior distribution.
         '''
+        warnings.filterwarnings("ignore", category=UserWarning, module="sklearn.gaussian_process")
+
+        if initial_ensemble_size is None:
+            initial_ensemble_size = 10 * inverse_problem.dim_of_parameters
+
+        if isinstance(kernel, str):
+            if kernel == 'RBF_isotropic':
+                kernel = ConstantKernel(1.0, (1e-3, 1e3)) * RBF(length_scale=1.0, length_scale_bounds=(1e-2, 1e2))
+            elif kernel == 'RBF_anisotropic':
+                kernel = ConstantKernel(1.0, (1e-3, 1e3)) * RBF(length_scale=[1.0]*inverse_problem.dim_of_parameters, 
+                                                                length_scale_bounds=(1e-2, 1e2))
         self.initial_ensemble_size = initial_ensemble_size
         self.implausibility_threshold = implausibility_threshold
         self.prior = prior
         self.inverse_problem = inverse_problem
         self.emulator_sample_size = emulator_sample_size
         self.kernel = kernel
+        self.normalize_y = normalize_y
 
         # Vector of parameters which is updated over iterations
         # (N_samples,dim_of_parameters)
@@ -76,7 +91,7 @@ class HistoryMatching:
 
         gps = []
         for i in range(Y.shape[1]):
-            gp = GaussianProcessRegressor(kernel=self.kernel)
+            gp = GaussianProcessRegressor(kernel=self.kernel, normalize_y=self.normalize_y)
             gp.fit(X, Y[:,i])
             gps.append(gp)
 
