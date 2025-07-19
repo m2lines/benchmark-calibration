@@ -1,5 +1,7 @@
 import numpy as np
 from sklearn.gaussian_process import GaussianProcessRegressor
+import matplotlib.pyplot as plt
+import math
 
 class HistoryMatching:
     """
@@ -16,6 +18,7 @@ class HistoryMatching:
                  initial_ensemble_size=10, 
                  prior=np.random.randn,
                  emulator_sample_size=10000,
+                 kernel=None,
                  implausibility_threshold=3.0):
         '''
         We specify the number of parameters and observations in order to generate the initial ensemble
@@ -35,6 +38,7 @@ class HistoryMatching:
         self.prior = prior
         self.inverse_problem = inverse_problem
         self.emulator_sample_size = emulator_sample_size
+        self.kernel = kernel
 
         # Vector of parameters which is updated over iterations
         # (N_samples,dim_of_parameters)
@@ -72,7 +76,7 @@ class HistoryMatching:
 
         gps = []
         for i in range(Y.shape[1]):
-            gp = GaussianProcessRegressor()
+            gp = GaussianProcessRegressor(kernel=self.kernel)
             gp.fit(X, Y[:,i])
             gps.append(gp)
 
@@ -139,3 +143,56 @@ class HistoryMatching:
         self.error_gp.append(error_gp)
         self.error_IF.append(error_IF)
         self.forward_evaluations.append(self.evaluations.shape[0])
+
+        # Collect best solutions to inverse problem
+        self.parameter_forward = parameter_forward
+        self.parameter_gp = parameter_gp
+        
+        # Collect regressors for sensitivity analysis
+        self.gps = gps
+
+    def plot_landscape(self):
+        '''
+        Plot true forward map and learned GP landscape
+        '''
+        N = self.inverse_problem.dim_of_observations
+        M = self.inverse_problem.dim_of_parameters
+
+        for n in range(N):
+            ncols = 3
+            nrows = math.ceil(M / ncols)
+            plt.figure(figsize=(3*ncols,3*nrows))
+            ymin=+np.inf
+            ymax=-np.inf
+            for m in range(M):
+                plt.subplot(nrows, ncols, m+1)
+                plt.title(f"Parameter {m+1}")
+                
+                parameter = self.inverse_problem._true_parameter()
+                parameter_section = np.tile(parameter, (100, 1))
+                parameter_section[:, m] = np.linspace(parameter[m] - 1, parameter[m] + 1, 100)
+
+                y_true = self.inverse_problem.forward_map(parameter_section)[:,n]
+                plt.plot(parameter_section[:, m], y_true, label='True Forward Map', color='k')
+
+                y_mean, y_std = self.gps[n].predict(parameter_section, return_std=True)
+                plt.plot(parameter_section[:, m], y_mean, label='GP', color='b')
+                plt.fill_between(parameter_section[:, m], y_mean - y_std, y_mean + y_std, color='b', alpha=0.2)
+
+                plt.axvline(x=parameter[m], color='k', linestyle=':', label='True Parameter')
+                plt.axvline(x=self.parameter_forward[m], color='tab:green', linestyle='--', lw=3, label='Parameter Forward')
+                plt.axvline(x=self.parameter_gp[m], color='tab:red', linestyle='--', lw=3, label='Parameter GP')
+
+                plt.axhline(y=self.inverse_problem.observation()[n], color='tab:orange', linestyle='--', lw=3, label='Observation')
+
+                plt.legend(fontsize=8)
+                plt.grid()
+
+                ymin = min(ymin, y_true.min(), y_mean.min() - y_std.max())
+                ymax = max(ymax, y_true.max(), y_mean.max() + y_std.max())
+            
+            for m in range(M):
+                plt.subplot(nrows, ncols, m+1)
+                plt.ylim(ymin, ymax)
+            plt.suptitle(f'Observation {n+1}')
+            plt.tight_layout()
