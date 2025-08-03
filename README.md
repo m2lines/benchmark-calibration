@@ -1,5 +1,8 @@
 The purpose of this repository is to benchmark various calibration methods designed to solve inverse problems on simple analytical examples.
 
+<img width="1189" height="364" alt="Screenshot 2025-08-03 at 1 41 16 AM" src="https://github.com/user-attachments/assets/da59485b-0985-47fa-a9e9-e3c8e8ebab2b" />
+
+
 
 <img width="1578" height="1236" alt="broyden_method" src="https://github.com/user-attachments/assets/2adf2984-8dbd-40b0-9143-af5f6a8e9be5" />
 
