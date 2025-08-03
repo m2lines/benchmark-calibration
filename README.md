@@ -1,5 +1,10 @@
 The purpose of this repository is to benchmark various calibration methods designed to solve inverse problems on simple analytical examples.
 
+
+<img width="1578" height="1236" alt="broyden_method" src="https://github.com/user-attachments/assets/2adf2984-8dbd-40b0-9143-af5f6a8e9be5" />
+
+
+
 # Inverse problem
 The inverse problem has the following building blocks:
 * $y=G(u)$ is the forward map
