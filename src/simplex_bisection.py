@@ -320,7 +320,7 @@ class Simplex:
       self.F = F
       return x_solved
     
-def SimplexBisection(forward_map, max_depth=1, exploration=False, root=None, dimension=None, bisect_parent=False):
+def SimplexBisection(forward_map, max_depth=1, exploration=False, root=None, dimension=None, bisect_parent=False, evaluate_best=False):
   '''
   This function assumes that the solution to inverse
   problem ||f(x,y)||_2 -> min is inside the
@@ -335,7 +335,6 @@ def SimplexBisection(forward_map, max_depth=1, exploration=False, root=None, dim
   if root is None:
     root = Simplex(dimension=dimension)
 
-
   seen_simplexes = set(root.get_key())
   def bisect_simplexes_guided_by_loss(simplexes, force_bisect=False, verbose=False):
     # This key is activated when all triangles do 
@@ -346,6 +345,8 @@ def SimplexBisection(forward_map, max_depth=1, exploration=False, root=None, dim
       F = np.vstack([forward_map.lookup_table(tuple(simplex.vertices[i])) for i in range(len(simplex.vertices))])
       # Solve the inverse problem
       x_solve = simplex.solve_inverse_problem(F)
+      if evaluate_best:
+        forward_map.lookup_table(tuple(x_solve))
       # Check that the solution lies inside
       is_inside = simplex.is_x_inside(x_solve)
       nothing_inside = nothing_inside and not is_inside
