@@ -10,10 +10,10 @@ Random.seed!(1234)   # Fix random numbers globally
 ########## Set the inverse problem ##########
 a = sqrt(7/5.)
 b = 1.
-noise = 0.3
+noise = 0.1
 G(u) = [a - u[1], b * (u[2] - u[1]^2)] + noise * randn(2)
 true_u = [a,a^2]
-y = G(true_u)
+y = [0,0]
 # Model of the observational error introduced above
 Γ = (noise)^2*I
 prior = constrained_gaussian("two_with_spread_1", 0, 1, -Inf, Inf, repeats=2)
