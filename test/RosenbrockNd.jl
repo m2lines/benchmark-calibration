@@ -8,15 +8,14 @@ using Pkg
 Random.seed!(1234)   # Fix random numbers globally
 
 ########## Set the inverse problem ##########
-a = sqrt(7/5.)
-b = 1.
 noise = 0.1
-G(u) = [a - u[1], b * (u[2] - u[1]^2)] .+ noise * randn(2)
-true_u = [a,a^2]
-y = [0,0]
+Ndim = 20
+G(u) = vcat(u[2:end] .- u[1:end-1].^2, 1 .- u[1:end-1]) .+ noise * randn(2*Ndim-2)
+true_u = ones(Ndim)
+y = zeros(2*Ndim-2)
 # Model of the observational error introduced above
 Γ = (noise)^2*I
-prior = constrained_gaussian("two_with_spread_1", 0, 1, -Inf, Inf, repeats=2)
+prior = constrained_gaussian("many_with_spread_1", 0, 1, -Inf, Inf, repeats=Ndim)
 
 ########### Initialize the EnsembleKalmanProcess ##########
 N_ensemble = 30
