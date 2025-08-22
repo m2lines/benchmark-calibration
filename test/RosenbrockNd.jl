@@ -26,6 +26,19 @@ default_eki = EnsembleKalmanProcess(
     verbose=false
 )
 
+no_scheduler_eki = EnsembleKalmanProcess(
+    initial_ensemble, y, Γ, Inversion(),
+    verbose=false,
+    scheduler = DefaultScheduler(1)
+)
+
+no_scheduler_no_accelerator_eki = EnsembleKalmanProcess(
+    initial_ensemble, y, Γ, Inversion(),
+    verbose=false,
+    scheduler = DefaultScheduler(1),
+    accelerator = DefaultAccelerator(),
+)
+
 vanilla_eki = EnsembleKalmanProcess(
     initial_ensemble, y, Γ, Inversion(),
     scheduler = DefaultScheduler(1),
@@ -42,12 +55,22 @@ for i in 1:N_iterations
     g_ens = hcat([G(params_default[:, i]) for i in 1:N_ensemble]...)
     update_ensemble!(default_eki, g_ens)
 
+    params_no_scheduler = get_ϕ_final(prior, no_scheduler_eki)
+    g_ens = hcat([G(params_no_scheduler[:, i]) for i in 1:N_ensemble]...)
+    update_ensemble!(no_scheduler_eki, g_ens)
+
+    params_no_scheduler_no_accelerator = get_ϕ_final(prior, no_scheduler_no_accelerator_eki)
+    g_ens = hcat([G(params_no_scheduler_no_accelerator[:, i]) for i in 1:N_ensemble]...)
+    update_ensemble!(no_scheduler_no_accelerator_eki, g_ens)
+
     params_vanilla = get_ϕ_final(prior, vanilla_eki)
     g_ens = hcat([G(params_vanilla[:, i]) for i in 1:N_ensemble]...)
     update_ensemble!(vanilla_eki, g_ens, deterministic_forward_map=false)
 
     solution_default = get_ϕ_mean_final(prior, default_eki)
+    solution_no_scheduler = get_ϕ_mean_final(prior, no_scheduler_eki)
+    solution_no_scheduler_no_accelerator = get_ϕ_mean_final(prior, no_scheduler_no_accelerator_eki)
     solution_vanilla = get_ϕ_mean_final(prior, vanilla_eki)
 
-    println("Iteration $i. Default EKI error: ", norm(solution_default .- true_u), " Vanilla EKI error: ", norm(solution_vanilla .- true_u))
+    println("Iteration $i. Default EKI error: ", norm(solution_default .- true_u),  " No scheduler EKI error: ", norm(solution_no_scheduler .- true_u), " No scheduler and accelerator EKI error: ", norm(solution_no_scheduler_no_accelerator .- true_u),  " Vanilla EKI error: ", norm(solution_vanilla .- true_u))
 end
