@@ -106,7 +106,7 @@ class Rosenbrock:
         self.calls += 1
         x = np.array(_x)
         if self.A_affine is not None and self.b_affine is not None:
-           x = np.linalg.inv(self.A_affine) @ (x - self.b_affine)
+           x = np.linalg.inv(self.A_affine) @ x  - self.b_affine
         self.x.append(x)
         out = np.array([self.a - x[0], self.b * (x[1] - x[0]**2)])
         out += self.noise * self.rng.normal(size=out.shape)
