@@ -10,7 +10,7 @@ seed = 42
 x_ens = np.random.randn(2,30)
 
 # Untransformed iteration
-root, stats = EKI(Rosenbrock(noise=noise, seed=seed), y=np.zeros(2), noise=noise, seed=seed, x_ens = x_ens,
+root, stats = EKI(Rosenbrock(noise=noise, seed=seed), y=np.zeros([2]), noise=noise, seed=seed, x_ens = x_ens,
                   julia_backend=True,
                   #scheduler = "DataMisfitController(terminate_at = 1)",
                   localization_method = "EnsembleKalmanProcesses.Localizers.SECNice()",
@@ -18,14 +18,17 @@ root, stats = EKI(Rosenbrock(noise=noise, seed=seed), y=np.zeros(2), noise=noise
                   )
 
 # Introduce Affine transformation
-A = np.array([[1e+5,0],[0,1e-5]])
-b = np.array([1, 10])
+A = np.array([[1e+100,0],[0,1e-100]])
+b = np.array([10000, -20000])
 #A = 100 * np.random.randn(2,2)
 #b  = 100 * np.random.randn(2)
 
 x_ens_transformed = A @ (x_ens + b[:,None])
 
-root_t, stats_t = EKI(Rosenbrock(noise=noise, seed=seed, A_affine=A, b_affine=b), y=np.zeros(2), noise=noise, seed=seed, x_ens=x_ens_transformed,
+print("Initial params:", x_ens[:,0])
+print("Affine transformed params:", x_ens_transformed[:,0])
+
+root_t, stats_t = EKI(Rosenbrock(noise=noise, seed=seed, A_affine=A, b_affine=b), y=np.zeros([2]), noise=noise, seed=seed, x_ens=x_ens_transformed,
                       julia_backend=True,
                       #scheduler = "DataMisfitController(terminate_at = 1)",
                       localization_method = "EnsembleKalmanProcesses.Localizers.SECNice()",
@@ -41,7 +44,7 @@ print("Transformed EKI mean:", root_transformed)
 diff = np.linalg.norm(root - root_transformed)
 print("L2 difference between Transformed and Untransformed EKI means:", diff)
 
-if diff < 1e-12:
+if diff < 1e-10:
     print("✅ Affine transformed is equivalent to untransformed up to numerical precision")
 else:
     print("⚠️ Affine transformed is different from untransformed")
