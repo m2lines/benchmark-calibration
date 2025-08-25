@@ -3,15 +3,15 @@ def EKI(f, ens_size=None, niters=5, y=0, noise=0, seed=None, uniform=False, low=
         julia_backend=False,
         scheduler="DefaultScheduler(1)",
         accelerator="DefaultAccelerator()",
-        localization="EnsembleKalmanProcesses.Localizers.NoLocalization()",
+        localization_method="EnsembleKalmanProcesses.Localizers.NoLocalization()",
         deterministic_forward_map="false"):
   '''
   Vanilla Ensemble Kalman Inversion (EKI) implementation is implemented by 
   default in Python and Julia and should be equal up to numerical precision.
 
   One can try to switch Julia implementation to use additional options:
-  scheduler = "DataMisfitController(terminate_at = 1)"
-  localization_method = "Localizers.SECNice()"
+  scheduler = "DataMisfitController(terminate_at = 1)",
+  localization_method = "EnsembleKalmanProcesses.Localizers.SECNice()",
   accelerator = "NesterovAccelerator()"
 
   deterministic_forward_map="true"
@@ -42,7 +42,7 @@ def EKI(f, ens_size=None, niters=5, y=0, noise=0, seed=None, uniform=False, low=
                   x_ens, y, Γ, Inversion(),
                   scheduler = {scheduler},
                   accelerator = {accelerator},
-                  localization_method = {localization},
+                  localization_method = {localization_method},
                   verbose = false
               )
               """)
@@ -51,14 +51,14 @@ def EKI(f, ens_size=None, niters=5, y=0, noise=0, seed=None, uniform=False, low=
   for i in range(niters):
     y_ens = np.stack([f(x) for x in x_ens.T]).T
 
+    x_ens_data.append(x_ens)
+    y_ens_data.append(y_ens)
+
     if julia_backend:
       Main.y_ens = y_ens
       Main.eval(f"update_ensemble!(eki, y_ens, deterministic_forward_map={deterministic_forward_map})")
       x_ens = np.array(Main.eval("get_u_final(eki)"))
     else:
-      x_ens_data.append(x_ens)
-      y_ens_data.append(y_ens)
-
       cov_xy = (x_ens-mean(x_ens)) @ (y_ens-mean(y_ens)).T / ens_size
       cov_yy = (y_ens-mean(y_ens)) @ (y_ens-mean(y_ens)).T / ens_size
 
