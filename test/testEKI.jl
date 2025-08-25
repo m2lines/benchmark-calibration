@@ -40,7 +40,7 @@ vanilla_eki = EnsembleKalmanProcess(
 
 ######## Get ensemble of parameters ########
 
-params_i = get_ϕ_final(prior, default_eki)
+params_i = get_u_final(default_eki)
 g_ens = hcat([G(params_i[:, i]) for i in 1:N_ensemble]...)
 
 println("\n--- Forward model evaluation ---")
@@ -68,10 +68,10 @@ println("Shape of Kalman gain K: ", size(K))
 
 ############# Predict using EnsembleKalmanProcesses #################
 update_ensemble!(default_eki, g_ens, deterministic_forward_map=false)
-params_default = get_ϕ_final(prior, default_eki)
+params_default = get_u_final(default_eki)
 
 update_ensemble!(vanilla_eki, g_ens, deterministic_forward_map=false)
-params_vanilla = get_ϕ_final(prior, vanilla_eki)
+params_vanilla = get_u_final(vanilla_eki)
 
 ############## Compare the two methods #################
 rel_err_default = norm(params_default - params_new) / norm(params_i)
