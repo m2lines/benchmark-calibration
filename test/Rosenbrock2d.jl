@@ -25,6 +25,7 @@ initial_ensemble = construct_initial_ensemble(prior, N_ensemble)
 
 default_eki = EnsembleKalmanProcess(
     initial_ensemble, y, Γ, Inversion(),
+    scheduler = DefaultScheduler(1),
     verbose=false
 )
 
