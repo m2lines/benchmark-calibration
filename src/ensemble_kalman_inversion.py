@@ -1,5 +1,5 @@
 import numpy as np
-def EKI(f, ens_size=None, niters=5, y=0, noise=0, seed=None, uniform=False, low=None, high=None, randomized_likelihood=False,
+def EKI(f, ens_size=None, niters=5, y=0, noise=0, seed=None, uniform=False, low=None, high=None, randomized_likelihood=False, x_ens=None,
         julia_backend=False,
         scheduler="DefaultScheduler(1)",
         accelerator="DefaultAccelerator()",
@@ -22,10 +22,11 @@ def EKI(f, ens_size=None, niters=5, y=0, noise=0, seed=None, uniform=False, low=
 
   rng = np.random.default_rng(seed=seed)
   
-  if uniform:
-    x_ens = np.stack([rng.uniform(low[i], high[i], ens_size) for i in range(len(low))])
-  else:
-    x_ens = rng.normal(size=(f.dim_of_parameters, ens_size))
+  if x_ens is None:
+    if uniform:
+      x_ens = np.stack([rng.uniform(low[i], high[i], ens_size) for i in range(len(low))])
+    else:
+      x_ens = rng.normal(size=(f.dim_of_parameters, ens_size))
 
   mean=lambda x: x.mean(axis=-1,keepdims=True)
   x_ens_data = []
@@ -89,7 +90,7 @@ class Rosenbrock:
     Has a global minimum at:
     (a,a**2)
     '''
-    def __init__(self, noise=0.0, seed=0, a=np.sqrt(7/5), b=1):
+    def __init__(self, noise=0.0, seed=0, a=np.sqrt(7/5), b=1, A_affine = None, b_affine = None):
         self.noise = noise
         self.calls = 0
         self.rng = np.random.default_rng(seed)
@@ -98,10 +99,14 @@ class Rosenbrock:
         self.dim_of_parameters = 2
         self.a = a
         self.b = b
+        self.A_affine = A_affine
+        self.b_affine = b_affine
 
     def __call__(self, _x):
         self.calls += 1
         x = np.array(_x)
+        if self.A_affine is not None and self.b_affine is not None:
+           x = np.linalg.inv(self.A_affine) @ (x - self.b_affine)
         self.x.append(x)
         out = np.array([self.a - x[0], self.b * (x[1] - x[0]**2)])
         out += self.noise * self.rng.normal(size=out.shape)
