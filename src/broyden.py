@@ -1,6 +1,6 @@
 import numpy as np
 
-def broyden_solver(f, x0, niters=20, lambda_regularization=0, bad_broyden=False, minimum_step=1e-15, verbose=False):
+def broyden_solver(f, x0, niters=20, lambda_regularization=0, bad_broyden=False, minimum_step=1e-15, verbose=False, chord=False, fixed=False, gradient_descend_step=0.0, gradient_descend_with_newton_step=False):
     """
     Broyden's method for solving f(x) = 0
     Parameters:
@@ -15,6 +15,7 @@ def broyden_solver(f, x0, niters=20, lambda_regularization=0, bad_broyden=False,
 
     m = len(x)
     y = f(x)
+    y0 = y
     n = len(y)
 
     # Simple initialization with finite differences and relatively significant
@@ -33,44 +34,49 @@ def broyden_solver(f, x0, niters=20, lambda_regularization=0, bad_broyden=False,
 
     H = np.linalg.pinv(J)
 
-    loss_ratio_expected = []
-    loss_ratio_final = []
-
     for i in range(niters):
-        if bad_broyden:
-          h = - H@y
-          Jh = np.linalg.pinv(H)@h
+        if gradient_descend_step > 0.0:
+          h = - gradient_descend_step * J.T@y
         else:
-          h = - np.linalg.solve(J.T@J + lambda_regularization * np.eye(m,m), J.T@y)
-          Jh = J@h
+          if bad_broyden:
+            h = - H@y
+          else:
+            h = - np.linalg.solve(J.T@J + lambda_regularization * np.eye(m,m), J.T@y)
 
         if (np.linalg.norm(h) / np.sqrt(m) < minimum_step):
           print('Stop. Update is too small at iteration', i)
           break
 
-        initial_loss = np.linalg.norm(y)**2
-        expected_loss = np.linalg.norm(y+Jh)**2
-
         x_new = x + h
         y_new = f(x_new)
 
-        final_loss = np.linalg.norm(y_new)**2
-        loss_ratio_expected.append(expected_loss/initial_loss)
-        loss_ratio_final.append(final_loss/initial_loss)
-        if verbose:
-          print('LOSS RATIO>Expected/Final: %.2f/%.2f' % (expected_loss/initial_loss, final_loss/initial_loss))
-          try:
-            Jh_true = f.J@h
-            print('Jh error', np.linalg.norm(Jh_true-Jh)/np.linalg.norm(Jh_true))
-          except:
-            pass
+        if not(fixed):
+          if chord:
+            w = y_new - y0
+            h = x_new - x0
+          else:
+            w = y_new - y
+            h = x_new - x
 
-        w = y_new - y
-
-        if bad_broyden:
-          H += np.outer(h-H@w, w) / np.dot(w,w)
-        else:
-          J += np.outer(w-J@h, h) / np.dot(h,h)
+          if bad_broyden:
+            H += np.outer(h-H@w, w) / np.dot(w,w)
+          else:
+            J += np.outer(w-J@h, h) / np.dot(h,h)
 
         x, y = x_new, y_new
     return x
+
+def Gauss_Newton(f, x0, niters=20):
+  """
+  This is Gauss-Newton solver which assumes
+  that the Jacobian is known and deterministic but
+  the residual can be stochastic
+  """
+  x = x0.copy()
+
+  for i in range(niters):
+    y = f(x)
+    J = f.J(x)
+    x = x - np.linalg.solve(J.T@J, J.T@y)
+    
+  return x
